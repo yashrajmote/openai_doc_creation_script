@@ -1,17 +1,18 @@
-# Excel to DOCX Generator
+# Excel to DOCX Generator - Drag & Drop App
 
-A Python script that processes Excel files containing company and job position data, filters out invalid entries, and generates individual DOCX files for each valid company.
+A user-friendly drag-and-drop application that processes Excel files containing company and job position data, filters out invalid entries, and generates individual DOCX files for each valid company.
 
 ## Features
 
+- **🖱️ Drag & Drop Interface**: Simply drag your Excel file onto the app
 - **Smart Filtering**: Automatically filters out:
   - Empty cells (missing company or position data)
   - Date entries in the company column (e.g., "10-Aug", "11-Aug")
   - Job board names (LinkedIn, Indeed, Handshake, Glassdoor, JobRight, GitHub)
+- **Smart Naming**: Automatically abbreviates job titles (SWE, SWD, AssSWE, AssSWD)
 - **DOCX Generation**: Creates professional-looking Word documents for each valid company
-- **Batch Processing**: Processes entire Excel files at once
-- **Error Handling**: Robust error handling with detailed progress reporting
-- **Customizable Output**: Choose your own output directory
+- **Real-time Processing**: See progress and results as they happen
+- **No Technical Knowledge Required**: Perfect for non-technical users
 
 ## Requirements
 
@@ -20,6 +21,7 @@ A Python script that processes Excel files containing company and job position d
   - pandas
   - python-docx
   - openpyxl
+  - tkinterdnd2
 
 ## Installation
 
@@ -31,19 +33,16 @@ A Python script that processes Excel files containing company and job position d
 
 ## Usage
 
-### Basic Usage
+### Drag & Drop App (Recommended)
 ```bash
-python excel_to_docx_generator.py your_file.xlsx
+python3 drag_drop_app.py
 ```
 
-### Specify Output Directory
-```bash
-python excel_to_docx_generator.py your_file.xlsx -o /path/to/output/directory
-```
+Then simply drag and drop your Excel file onto the app!
 
-### Example
+### Command Line (Advanced Users)
 ```bash
-python excel_to_docx_generator.py job_applications.xlsx -o ./my_docx_files
+python3 excel_to_docx_generator.py your_file.xlsx
 ```
 
 ## Excel File Format
