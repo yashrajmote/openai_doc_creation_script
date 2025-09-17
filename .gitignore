@@ -51,3 +51,11 @@ generated_docx_files/
 
 # Logs
 *.log
+
+# Environment variables and secrets
+.env
+.env.local
+.env.production
+.env.staging
+config.ini
+secrets.json
