@@ -215,6 +215,42 @@ class DragDropApp:
         
         return 'java' if java_score > csharp_score else 'csharp'
     
+    def abbreviate_job_title(self, job_title):
+        """
+        Abbreviate job title according to specified rules.
+        
+        Args:
+            job_title (str): Original job title
+            
+        Returns:
+            str: Abbreviated job title
+        """
+        if not isinstance(job_title, str):
+            return job_title
+        
+        title_lower = job_title.lower().strip()
+        
+        # Check for engineer -> SWE
+        if 'engineer' in title_lower:
+            if 'associate' in title_lower:
+                return 'AssSWE'
+            else:
+                return 'SWE'
+        
+        # Check for developer -> SWD
+        elif 'developer' in title_lower:
+            if 'associate' in title_lower:
+                return 'AssSWD'
+            else:
+                return 'SWD'
+        
+        # For other titles, return as-is (cleaned)
+        import re
+        invalid_chars = '<>:"/\\|?*'
+        for char in invalid_chars:
+            job_title = job_title.replace(char, '_')
+        job_title = re.sub(r'\s+', '_', job_title.strip())
+        return job_title[:50]
             
     def process_files(self):
         """Process the Excel file and generate DOCX files."""
@@ -340,8 +376,8 @@ class DragDropApp:
                 import shutil
                 import re
                 safe_company = re.sub(r'[<>:"/\\|?*]', '_', str(company))[:30]
-                safe_position = re.sub(r'[<>:"/\\|?*]', '_', str(position))[:30]
-                resume_filename = f"{safe_company}_{safe_position}.docx"
+                abbreviated_position = self.abbreviate_job_title(str(position))
+                resume_filename = f"{safe_company}_{abbreviated_position}.docx"
                 resume_filepath = os.path.join(self.resume_output_directory.get(), resume_filename)
                 
                 # Copy template to new location
