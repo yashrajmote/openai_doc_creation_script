@@ -341,7 +341,7 @@ class DragDropApp:
                 import re
                 safe_company = re.sub(r'[<>:"/\\|?*]', '_', str(company))[:30]
                 safe_position = re.sub(r'[<>:"/\\|?*]', '_', str(position))[:30]
-                resume_filename = f"{valid_entries:03d}_{safe_company}_{safe_position}_Resume.docx"
+                resume_filename = f"{safe_company}_{safe_position}.docx"
                 resume_filepath = os.path.join(self.resume_output_directory.get(), resume_filename)
                 
                 # Copy template to new location
