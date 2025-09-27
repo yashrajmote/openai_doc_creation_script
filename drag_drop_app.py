@@ -27,9 +27,11 @@ class DragDropApp:
         # Variables
         self.output_directory = tk.StringVar()
         self.resume_output_directory = tk.StringVar()
-        self.java_template_path = tk.StringVar()
-        self.csharp_template_path = tk.StringVar()
         self.processing = False
+        
+        # Hardcoded template paths - Update these to your actual template file paths
+        self.java_template_path = "/Users/yash/Desktop/openai_doc_creation_script/templates/java_resume_template.dotx"
+        self.csharp_template_path = "/Users/yash/Desktop/openai_doc_creation_script/templates/csharp_resume_template.dotx"
         
         # OpenAI API key from environment variable
         self.openai_api_key = os.getenv('OPENAI_API_KEY')
@@ -67,23 +69,20 @@ class DragDropApp:
                                font=("Arial", 18, "bold"))
         title_label.pack(pady=(0, 20))
         
-        # Template Selection Section
-        template_frame = ttk.LabelFrame(main_frame, text="Resume Templates (Optional)", padding="10")
+        # Template Status Section
+        template_frame = ttk.LabelFrame(main_frame, text="Resume Templates", padding="10")
         template_frame.pack(fill=tk.X, pady=10)
         
-        # Java Template
-        java_frame = ttk.Frame(template_frame)
-        java_frame.pack(fill=tk.X, pady=5)
-        ttk.Label(java_frame, text="Java Template (.dotx):").pack(side=tk.LEFT)
-        ttk.Entry(java_frame, textvariable=self.java_template_path, width=40).pack(side=tk.LEFT, padx=(5, 5))
-        ttk.Button(java_frame, text="Browse", command=self.browse_java_template).pack(side=tk.LEFT)
+        # Template status labels
+        java_status = "✅ Found" if os.path.exists(self.java_template_path) else "❌ Not Found"
+        csharp_status = "✅ Found" if os.path.exists(self.csharp_template_path) else "❌ Not Found"
         
-        # C# Template
-        csharp_frame = ttk.Frame(template_frame)
-        csharp_frame.pack(fill=tk.X, pady=5)
-        ttk.Label(csharp_frame, text="C# Template (.dotx):").pack(side=tk.LEFT)
-        ttk.Entry(csharp_frame, textvariable=self.csharp_template_path, width=40).pack(side=tk.LEFT, padx=(5, 5))
-        ttk.Button(csharp_frame, text="Browse", command=self.browse_csharp_template).pack(side=tk.LEFT)
+        ttk.Label(template_frame, text=f"Java Template: {java_status}").pack(anchor=tk.W)
+        ttk.Label(template_frame, text=f"C# Template: {csharp_status}").pack(anchor=tk.W)
+        
+        if not os.path.exists(self.java_template_path) or not os.path.exists(self.csharp_template_path):
+            ttk.Label(template_frame, text="⚠️ Please ensure template files exist at the specified paths", 
+                     foreground="red").pack(anchor=tk.W, pady=5)
         
         # Instructions
         instructions = ttk.Label(main_frame, 
@@ -197,25 +196,6 @@ class DragDropApp:
         if directory:
             self.resume_output_directory.set(directory)
             
-    def browse_java_template(self):
-        """Browse for Java template file."""
-        from tkinter import filedialog
-        filename = filedialog.askopenfilename(
-            title="Select Java Resume Template",
-            filetypes=[("Word Template", "*.dotx"), ("Word Document", "*.docx"), ("All files", "*.*")]
-        )
-        if filename:
-            self.java_template_path.set(filename)
-            
-    def browse_csharp_template(self):
-        """Browse for C# template file."""
-        from tkinter import filedialog
-        filename = filedialog.askopenfilename(
-            title="Select C# Resume Template",
-            filetypes=[("Word Template", "*.dotx"), ("Word Document", "*.docx"), ("All files", "*.*")]
-        )
-        if filename:
-            self.csharp_template_path.set(filename)
     
     def detect_template_type(self, job_description, position):
         """Detect which template to use based on job description and position."""
@@ -238,39 +218,31 @@ class DragDropApp:
     def load_template(self, template_path):
         """Load a .dotx template file."""
         try:
-            if template_path.lower().endswith('.dotx'):
-                # For .dotx files, we need to create a new document based on the template
-                doc = Document(template_path)
-                return doc
-            else:
-                # For .docx files, load directly
-                doc = Document(template_path)
-                return doc
+            # Load the template file (works for both .dotx and .docx)
+            doc = Document(template_path)
+            return doc
         except Exception as e:
             raise Exception(f"Error loading template {template_path}: {str(e)}")
     
     def populate_template(self, doc, resume_content, company, position):
-        """Populate template with AI-generated content."""
+        """Populate template with AI-generated content while preserving template structure."""
         try:
-            # Clear existing content and add new content
-            # Keep the first paragraph (header) if it exists
-            paragraphs_to_remove = []
-            for i, paragraph in enumerate(doc.paragraphs):
-                if i > 0:  # Keep first paragraph (header)
-                    paragraphs_to_remove.append(paragraph)
+            # Create a new document based on the template
+            new_doc = Document()
             
-            # Remove old content paragraphs
-            for paragraph in paragraphs_to_remove:
-                p = paragraph._element
-                p.getparent().remove(p)
+            # Copy the template's styles and formatting
+            for paragraph in doc.paragraphs:
+                if paragraph.text.strip():
+                    new_para = new_doc.add_paragraph()
+                    new_para.style = paragraph.style
+                    new_para.text = paragraph.text
             
-            # Add company and position info
-            doc.add_heading(f'Tailored Resume for {company}', level=1)
-            doc.add_paragraph(f'Position: {position}')
-            doc.add_paragraph('')  # Empty line
+            # Add company and position info at the top
+            new_doc.add_heading(f'Tailored Resume for {company}', level=1)
+            new_doc.add_paragraph(f'Position: {position}')
+            new_doc.add_paragraph('')  # Empty line
             
-            # Add AI-generated content
-            # Split content into sections and add with proper formatting
+            # Add AI-generated content with proper formatting
             sections = resume_content.split('\n\n')
             for section in sections:
                 if section.strip():
@@ -278,11 +250,11 @@ class DragDropApp:
                     if (section.strip().isupper() and len(section.strip()) < 50) or \
                        any(section.strip().upper().startswith(heading) for heading in 
                            ['SKILLS', 'WORK EXPERIENCE', 'EDUCATION', 'PROJECTS']):
-                        doc.add_heading(section.strip(), level=2)
+                        new_doc.add_heading(section.strip(), level=2)
                     else:
-                        doc.add_paragraph(section.strip())
+                        new_doc.add_paragraph(section.strip())
             
-            return doc
+            return new_doc
             
         except Exception as e:
             raise Exception(f"Error populating template: {str(e)}")
@@ -358,14 +330,18 @@ class DragDropApp:
                 self.results_text.insert(tk.END, "\n⚠️ No job description column found. Skipping resume generation.\n")
                 return
             
-            # Check if templates are selected
-            use_templates = self.java_template_path.get() and self.csharp_template_path.get()
+            # Check if templates exist
+            use_templates = os.path.exists(self.java_template_path) and os.path.exists(self.csharp_template_path)
             
             if use_templates:
                 self.results_text.insert(tk.END, "\n🎨 Using template-based resume generation...\n")
+                # Generate individual resume files using templates
                 self.generate_individual_resumes_with_templates(client, df, job_desc_col)
+                # Also generate master document with all responses
+                self.results_text.insert(tk.END, "\n📄 Generating master document...\n")
+                self.generate_combined_resume(client, df, job_desc_col)
             else:
-                self.results_text.insert(tk.END, "\n📝 Using text-based resume generation...\n")
+                self.results_text.insert(tk.END, "\n📝 Using text-based resume generation (templates not found)...\n")
                 self.generate_combined_resume(client, df, job_desc_col)
             
         except Exception as e:
@@ -397,7 +373,7 @@ class DragDropApp:
             try:
                 # Detect which template to use
                 template_type = self.detect_template_type(str(job_description), str(position))
-                template_path = self.java_template_path.get() if template_type == 'java' else self.csharp_template_path.get()
+                template_path = self.java_template_path if template_type == 'java' else self.csharp_template_path
                 
                 self.results_text.insert(tk.END, f"📋 Using {template_type.upper()} template\n")
                 self.results_text.see(tk.END)
@@ -488,7 +464,7 @@ class DragDropApp:
         """Generate a single tailored resume using OpenAI and template type."""
         
         # Read template content to use as base
-        template_path = self.java_template_path.get() if template_type == 'java' else self.csharp_template_path.get()
+        template_path = self.java_template_path if template_type == 'java' else self.csharp_template_path
         
         try:
             # Load template to extract existing content

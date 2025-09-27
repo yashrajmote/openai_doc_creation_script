@@ -1,6 +1,6 @@
 # Excel to DOCX Generator
 
-A drag-and-drop app that converts Excel job applications into individual Word documents.
+A drag-and-drop app that converts Excel job applications into individual Word documents using AI and custom templates.
 
 ## Quick Start
 
@@ -9,24 +9,43 @@ A drag-and-drop app that converts Excel job applications into individual Word do
    pip install -r requirements.txt
    ```
 
-2. Run the app:
+2. Set up templates:
+   - Place your Java resume template as `templates/java_resume_template.dotx`
+   - Place your C# resume template as `templates/csharp_resume_template.dotx`
+
+3. Run the app:
    ```bash
    python3 drag_drop_app.py
    ```
 
-3. Drag your Excel file onto the app
+4. Drag your Excel file onto the app
 
 ## Excel Format
 
-Your Excel file needs two columns:
+Your Excel file needs these columns:
 - **Company**: Company names
 - **Position**: Job titles
+- **Description** (or similar): Job descriptions for AI tailoring
 
 ## What It Does
 
-- Filters out empty rows, dates, and job board names
-- Creates one DOCX file per valid company
-- Files named: `{index}_{company}_{position}.docx`
+- **Smart Template Selection**: Automatically chooses Java or C# template based on job description
+- **Individual Resume Files**: Creates one tailored resume per job using your templates
+- **Master Document**: Also generates a combined document with all AI responses
+- **AI Tailoring**: Uses OpenAI to customize each resume for the specific job
+
+## Template Setup
+
+1. Create a `templates/` folder in your project directory
+2. Add your resume templates:
+   - `java_resume_template.dotx` - For Java/Spring positions
+   - `csharp_resume_template.dotx` - For C#/.NET positions
+3. Templates should contain your base resume content and formatting
+
+## Output Files
+
+- **Individual Resumes**: `001_CompanyName_Position_Resume.docx`
+- **Master Document**: `AI_Generated_Resumes.docx` (contains all responses)
 
 ## Command Line
 
