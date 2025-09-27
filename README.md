@@ -44,7 +44,7 @@ Your Excel file needs these columns:
 
 ## Output Files
 
-- **Individual Resume Files**: `001_CompanyName_Position_Resume.docx` (exact copies of your templates)
+- **Individual Resume Files**: `CompanyName_Position.docx` (exact copies of your templates)
 - **Master Document**: `AI_Generated_Resumes.docx` (contains all AI responses for reference)
 
 ## Command Line
