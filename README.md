@@ -30,9 +30,9 @@ Your Excel file needs these columns:
 ## What It Does
 
 - **Smart Template Selection**: Automatically chooses Java or C# template based on job description
-- **Individual Resume Files**: Creates one tailored resume per job using your templates
-- **Master Document**: Also generates a combined document with all AI responses
-- **AI Tailoring**: Uses OpenAI to customize each resume for the specific job
+- **Individual Resume Files**: Creates one copy of the appropriate template per job (no AI modification)
+- **Master Document**: Generates a combined document with all AI responses for reference
+- **Template Copying**: Simply copies your template files with job-specific naming
 
 ## Template Setup
 
@@ -44,8 +44,8 @@ Your Excel file needs these columns:
 
 ## Output Files
 
-- **Individual Resumes**: `001_CompanyName_Position_Resume.docx`
-- **Master Document**: `AI_Generated_Resumes.docx` (contains all responses)
+- **Individual Resume Files**: `001_CompanyName_Position_Resume.docx` (exact copies of your templates)
+- **Master Document**: `AI_Generated_Resumes.docx` (contains all AI responses for reference)
 
 ## Command Line
 

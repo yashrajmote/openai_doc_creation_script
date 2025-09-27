@@ -215,49 +215,6 @@ class DragDropApp:
         
         return 'java' if java_score > csharp_score else 'csharp'
     
-    def load_template(self, template_path):
-        """Load a .dotx template file."""
-        try:
-            # Load the template file (works for both .dotx and .docx)
-            doc = Document(template_path)
-            return doc
-        except Exception as e:
-            raise Exception(f"Error loading template {template_path}: {str(e)}")
-    
-    def populate_template(self, doc, resume_content, company, position):
-        """Populate template with AI-generated content while preserving template structure."""
-        try:
-            # Create a new document based on the template
-            new_doc = Document()
-            
-            # Copy the template's styles and formatting
-            for paragraph in doc.paragraphs:
-                if paragraph.text.strip():
-                    new_para = new_doc.add_paragraph()
-                    new_para.style = paragraph.style
-                    new_para.text = paragraph.text
-            
-            # Add company and position info at the top
-            new_doc.add_heading(f'Tailored Resume for {company}', level=1)
-            new_doc.add_paragraph(f'Position: {position}')
-            new_doc.add_paragraph('')  # Empty line
-            
-            # Add AI-generated content with proper formatting
-            sections = resume_content.split('\n\n')
-            for section in sections:
-                if section.strip():
-                    # Check if it's a heading (all caps or starts with common section names)
-                    if (section.strip().isupper() and len(section.strip()) < 50) or \
-                       any(section.strip().upper().startswith(heading) for heading in 
-                           ['SKILLS', 'WORK EXPERIENCE', 'EDUCATION', 'PROJECTS']):
-                        new_doc.add_heading(section.strip(), level=2)
-                    else:
-                        new_doc.add_paragraph(section.strip())
-            
-            return new_doc
-            
-        except Exception as e:
-            raise Exception(f"Error populating template: {str(e)}")
             
     def process_files(self):
         """Process the Excel file and generate DOCX files."""
@@ -348,11 +305,11 @@ class DragDropApp:
             self.results_text.insert(tk.END, f"\n❌ Error in resume generation: {str(e)}\n")
     
     def generate_individual_resumes_with_templates(self, client, df, job_desc_col):
-        """Generate individual resume files using templates."""
+        """Generate individual resume files by copying templates."""
         valid_entries = 0
         total_entries = len(df)
         
-        self.results_text.insert(tk.END, f"\n🔍 Found {total_entries} total rows. Generating individual resumes...\n")
+        self.results_text.insert(tk.END, f"\n🔍 Found {total_entries} total rows. Creating individual resume files...\n")
         self.results_text.see(tk.END)
         self.root.update()
         
@@ -366,7 +323,7 @@ class DragDropApp:
                 continue
             
             valid_entries += 1
-            self.results_text.insert(tk.END, f"\n🤖 [{valid_entries}] Generating resume for {company}...\n")
+            self.results_text.insert(tk.END, f"\n📄 [{valid_entries}] Creating resume file for {company}...\n")
             self.results_text.see(tk.END)
             self.root.update()
             
@@ -379,31 +336,26 @@ class DragDropApp:
                 self.results_text.see(tk.END)
                 self.root.update()
                 
-                # Generate resume content using OpenAI
-                resume_content = self.generate_single_resume(client, company, position, str(job_description), template_type)
-                
-                # Load and populate template
-                doc = self.load_template(template_path)
-                populated_doc = self.populate_template(doc, resume_content, company, position)
-                
-                # Save individual resume file
+                # Simply copy the template file
+                import shutil
                 import re
                 safe_company = re.sub(r'[<>:"/\\|?*]', '_', str(company))[:30]
                 safe_position = re.sub(r'[<>:"/\\|?*]', '_', str(position))[:30]
                 resume_filename = f"{valid_entries:03d}_{safe_company}_{safe_position}_Resume.docx"
                 resume_filepath = os.path.join(self.resume_output_directory.get(), resume_filename)
                 
-                populated_doc.save(resume_filepath)
+                # Copy template to new location
+                shutil.copy2(template_path, resume_filepath)
                 
                 self.results_text.insert(tk.END, f"✅ Created: {resume_filename}\n")
                 self.results_text.see(tk.END)
                 self.root.update()
                 
             except Exception as e:
-                self.results_text.insert(tk.END, f"❌ Error generating resume for {company}: {str(e)}\n")
+                self.results_text.insert(tk.END, f"❌ Error creating resume for {company}: {str(e)}\n")
                 continue
         
-        self.results_text.insert(tk.END, f"\n✅ Generated {valid_entries} individual tailored resumes!\n")
+        self.results_text.insert(tk.END, f"\n✅ Created {valid_entries} individual resume files!\n")
     
     def generate_combined_resume(self, client, df, job_desc_col):
         """Generate a combined resume document (original behavior)."""
@@ -461,18 +413,10 @@ class DragDropApp:
         self.results_text.insert(tk.END, f"📄 Resume file saved: {resume_file_path}\n")
             
     def generate_single_resume(self, client, company, position, job_description, template_type='java'):
-        """Generate a single tailored resume using OpenAI and template type."""
+        """Generate a single tailored resume using OpenAI for the master document."""
         
-        # Read template content to use as base
-        template_path = self.java_template_path if template_type == 'java' else self.csharp_template_path
-        
-        try:
-            # Load template to extract existing content
-            template_doc = Document(template_path)
-            template_content = "\n".join([paragraph.text for paragraph in template_doc.paragraphs if paragraph.text.strip()])
-        except:
-            # Fallback to hardcoded content if template can't be read
-            template_content = self.java_resume if template_type == 'java' else self.csharp_resume
+        # Use hardcoded content as base
+        template_content = self.java_resume if template_type == 'java' else self.csharp_resume
         
         prompt = f"""You are the top resume writer in the world. Your job is to take the job description I provide and tailor a resume so that it is ATS-optimized, keyword-rich, and highly compelling.
 
