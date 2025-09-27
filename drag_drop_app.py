@@ -21,12 +21,14 @@ class DragDropApp:
     def __init__(self, root):
         self.root = root
         self.root.title("Excel to DOCX Generator - Drag & Drop")
-        self.root.geometry("600x500")
+        self.root.geometry("700x600")
         self.root.resizable(True, True)
         
         # Variables
         self.output_directory = tk.StringVar()
         self.resume_output_directory = tk.StringVar()
+        self.java_template_path = tk.StringVar()
+        self.csharp_template_path = tk.StringVar()
         self.processing = False
         
         # OpenAI API key from environment variable
@@ -41,6 +43,17 @@ class DragDropApp:
 
         self.csharp_resume = """YASHRAJ MOTE LinkedIn | ymote@rockets.utoledo.edu |  GitHub SKILLS -	Languages: C#, Java, Python, C++, JavaScript, TypeScript -	Frameworks and Libraries: ASP.NET Core, Entity Framework Core, Spring Boot -	Frontend: Blazor, Angular, React, Next.js, Tailwind CSS, HTML5, CSS3 -	Databases & Tools: Microsoft SQL Server, MySQL, PostgreSQL, MongoDB, Firebase -	DevOps and Cloud: Docker, Kubernetes, GitHub Actions, GitLab CI, AWS (S3, Lambda), Azure, Git, CI/CD -	Other Tools: Kafka, Jenkins, Jira, Sanity CMS, Jasmine (Unit Testing) WORK EXPERIENCE Abhitech Energycon Limited, Toledo, OH							  	 May 2024 – Dec 2024 Full Stack Software Engineer Intern •	Developed a Gain/Loss Dashboard for coal power plants using Blazor, ASP.NET Core Web API and Entity Framework Core, helping users identify and act on data patterns contributing to monthly operational losses. •	Built an ETL pipeline with Apache Kafka to extract data from SAP into Microsoft SQL Server, and improved query speed by 50% with indexing. •	Implemented Docker for containerization and integrated with GitHub Actions for CI/CD pipeline. Leveraged AWS S3 to store large volumes of SAP data and AWS Lambda to automate data processing, reducing manual intervention. Crown Equipment, New Bremen, OH	           August 2023 – Dec 2023 Full Stack Software Engineer intern •	Developed an internal invoicing application using Angular, Typescript and designed RESTful APIs in Spring Boot, Java to reduce invoice processing time by 90%. Built a reusable Radio Button List component to improve form input UX. •	Utilized SQL queries and stored procedures to process large datasets within the invoicing platform, resulting in 50% faster financial reporting. •	Implemented Unit Tests using Jasmine to validate Angular components, identified critical edge-cases and performed debugging, achieving a 95% test coverage. •	Collaborated with cross-functional teams in the Software Development Life Cycle in an Agile/Scrum environment, performing Code Review and QA through Jira-based workflows, and maintained technical documentation. Technochrafts, remote	  January 2023 – July 2023 Software Engineer intern •	Developed a secure login system using ASP.NET Core and Entity Framework Core, implementing OAuth 2.0 and JWT for authentication and session management. •	Designed and implemented RESTful APIs in the backend service. Deployed and configured NGINX on Azure App Service to enable load balancing, implement server-side caching and optimize performance by 45%. •	Designed a CI/CD pipeline with GitLab CI and Docker, deploying to Azure Kubernetes Service to automate testing and cut deployment time by 40%. PROJECTS ML Intern – Anonymous Insurance Company •	Designed an MLOps pipeline with Docker and MLflow to automate model retraining and evaluation for XGBoost on insurance datasets. The pipeline optimized model performance, reduced tuning time by 25%, and seamlessly handled updates for datasets exceeding 10 million rows. Headstarter Fellowship – Pantry Tracker App | Next.js, React, Firebase •	Developed a web-based inventory system using Next.js and Firebase, implemented real-time updates and item categorization using Firestore listeners. Headstarter Fellowship – AI Customer Support •	Built a real-time AI-powered chat assistant using OpenAI API and Next.js, backed by AWS Lambda and WebSockets to handle 10K+ concurrent requests with <200ms latency. EDUCATION University of Toledo, Toledo, OH Bachelor of Science Degree Recipient | GPA – 3.3 | Major: Computer Science Engineering Honors and Awards: Dean's List (2020 – 2022), UToledo Rockets Scholarship, Engineering Scholarship"""
         
+        # Template keywords for detection
+        self.java_keywords = {
+            'java', 'spring', 'spring boot', 'maven', 'gradle', 'hibernate', 
+            'junit', 'tomcat', 'jpa', 'jdbc', 'servlet', 'jsp', 'struts'
+        }
+        
+        self.csharp_keywords = {
+            'c#', 'csharp', '.net', 'asp.net', 'entity framework', 'mvc', 
+            'blazor', 'azure', 'sql server', 'visual studio', 'nuget', 'wcf'
+        }
+        
         self.setup_ui()
         
     def setup_ui(self):
@@ -53,6 +66,24 @@ class DragDropApp:
         title_label = ttk.Label(main_frame, text="📄 Excel to DOCX Generator", 
                                font=("Arial", 18, "bold"))
         title_label.pack(pady=(0, 20))
+        
+        # Template Selection Section
+        template_frame = ttk.LabelFrame(main_frame, text="Resume Templates (Optional)", padding="10")
+        template_frame.pack(fill=tk.X, pady=10)
+        
+        # Java Template
+        java_frame = ttk.Frame(template_frame)
+        java_frame.pack(fill=tk.X, pady=5)
+        ttk.Label(java_frame, text="Java Template (.dotx):").pack(side=tk.LEFT)
+        ttk.Entry(java_frame, textvariable=self.java_template_path, width=40).pack(side=tk.LEFT, padx=(5, 5))
+        ttk.Button(java_frame, text="Browse", command=self.browse_java_template).pack(side=tk.LEFT)
+        
+        # C# Template
+        csharp_frame = ttk.Frame(template_frame)
+        csharp_frame.pack(fill=tk.X, pady=5)
+        ttk.Label(csharp_frame, text="C# Template (.dotx):").pack(side=tk.LEFT)
+        ttk.Entry(csharp_frame, textvariable=self.csharp_template_path, width=40).pack(side=tk.LEFT, padx=(5, 5))
+        ttk.Button(csharp_frame, text="Browse", command=self.browse_csharp_template).pack(side=tk.LEFT)
         
         # Instructions
         instructions = ttk.Label(main_frame, 
@@ -166,6 +197,96 @@ class DragDropApp:
         if directory:
             self.resume_output_directory.set(directory)
             
+    def browse_java_template(self):
+        """Browse for Java template file."""
+        from tkinter import filedialog
+        filename = filedialog.askopenfilename(
+            title="Select Java Resume Template",
+            filetypes=[("Word Template", "*.dotx"), ("Word Document", "*.docx"), ("All files", "*.*")]
+        )
+        if filename:
+            self.java_template_path.set(filename)
+            
+    def browse_csharp_template(self):
+        """Browse for C# template file."""
+        from tkinter import filedialog
+        filename = filedialog.askopenfilename(
+            title="Select C# Resume Template",
+            filetypes=[("Word Template", "*.dotx"), ("Word Document", "*.docx"), ("All files", "*.*")]
+        )
+        if filename:
+            self.csharp_template_path.set(filename)
+    
+    def detect_template_type(self, job_description, position):
+        """Detect which template to use based on job description and position."""
+        text = f"{job_description} {position}".lower()
+        
+        java_score = sum(1 for keyword in self.java_keywords if keyword in text)
+        csharp_score = sum(1 for keyword in self.csharp_keywords if keyword in text)
+        
+        # If scores are tied or both zero, use position title as tiebreaker
+        if java_score == csharp_score:
+            if any(keyword in text for keyword in ['java', 'spring']):
+                return 'java'
+            elif any(keyword in text for keyword in ['c#', '.net', 'csharp']):
+                return 'csharp'
+            else:
+                return 'java'  # Default to Java
+        
+        return 'java' if java_score > csharp_score else 'csharp'
+    
+    def load_template(self, template_path):
+        """Load a .dotx template file."""
+        try:
+            if template_path.lower().endswith('.dotx'):
+                # For .dotx files, we need to create a new document based on the template
+                doc = Document(template_path)
+                return doc
+            else:
+                # For .docx files, load directly
+                doc = Document(template_path)
+                return doc
+        except Exception as e:
+            raise Exception(f"Error loading template {template_path}: {str(e)}")
+    
+    def populate_template(self, doc, resume_content, company, position):
+        """Populate template with AI-generated content."""
+        try:
+            # Clear existing content and add new content
+            # Keep the first paragraph (header) if it exists
+            paragraphs_to_remove = []
+            for i, paragraph in enumerate(doc.paragraphs):
+                if i > 0:  # Keep first paragraph (header)
+                    paragraphs_to_remove.append(paragraph)
+            
+            # Remove old content paragraphs
+            for paragraph in paragraphs_to_remove:
+                p = paragraph._element
+                p.getparent().remove(p)
+            
+            # Add company and position info
+            doc.add_heading(f'Tailored Resume for {company}', level=1)
+            doc.add_paragraph(f'Position: {position}')
+            doc.add_paragraph('')  # Empty line
+            
+            # Add AI-generated content
+            # Split content into sections and add with proper formatting
+            sections = resume_content.split('\n\n')
+            for section in sections:
+                if section.strip():
+                    # Check if it's a heading (all caps or starts with common section names)
+                    if (section.strip().isupper() and len(section.strip()) < 50) or \
+                       any(section.strip().upper().startswith(heading) for heading in 
+                           ['SKILLS', 'WORK EXPERIENCE', 'EDUCATION', 'PROJECTS']):
+                        doc.add_heading(section.strip(), level=2)
+                    else:
+                        doc.add_paragraph(section.strip())
+            
+            return doc
+            
+        except Exception as e:
+            raise Exception(f"Error populating template: {str(e)}")
+            
     def process_files(self):
         """Process the Excel file and generate DOCX files."""
         if not self.current_file:
@@ -215,7 +336,7 @@ class DragDropApp:
             self.root.after(0, self.processing_complete)
             
     def generate_resumes(self, results):
-        """Generate tailored resumes using OpenAI API."""
+        """Generate tailored resumes using OpenAI API and templates."""
         try:
             # Set up OpenAI client
             client = openai.OpenAI(api_key=self.openai_api_key)
@@ -237,105 +358,181 @@ class DragDropApp:
                 self.results_text.insert(tk.END, "\n⚠️ No job description column found. Skipping resume generation.\n")
                 return
             
-            # Create resume document
-            from docx import Document
-            from docx.shared import Inches
-            from docx.enum.text import WD_ALIGN_PARAGRAPH
+            # Check if templates are selected
+            use_templates = self.java_template_path.get() and self.csharp_template_path.get()
             
-            doc = Document()
-            doc.add_heading('AI-Generated Tailored Resumes', 0)
-            
-            # Process each valid entry
-            valid_entries = 0
-            total_entries = len(df)
-            
-            self.results_text.insert(tk.END, f"\n🔍 Found {total_entries} total rows. Processing job descriptions...\n")
-            self.results_text.see(tk.END)
-            self.root.update()
-            
-            for index, row in df.iterrows():
-                company = row.get('Company', '')
-                position = row.get('Position', '')
-                job_description = row.get(job_desc_col, '')
-                
-                # Skip if any required field is empty
-                if pd.isna(company) or pd.isna(position) or pd.isna(job_description) or not str(job_description).strip():
-                    continue
-                
-                valid_entries += 1
-                self.results_text.insert(tk.END, f"\n🤖 [{valid_entries}] Generating resume for {company}...\n")
-                self.results_text.see(tk.END)
-                self.root.update()
-                
-                try:
-                    # Generate resume using OpenAI
-                    resume_content = self.generate_single_resume(client, company, position, str(job_description))
-                    
-                    # Add to document
-                    doc.add_heading(f'{company} - {position}', level=1)
-                    doc.add_paragraph(resume_content)
-                    doc.add_page_break()
-                    
-                    self.results_text.insert(tk.END, f"✅ Completed {company}\n")
-                    self.results_text.see(tk.END)
-                    self.root.update()
-                    
-                except Exception as e:
-                    self.results_text.insert(tk.END, f"❌ Error generating resume for {company}: {str(e)}\n")
-                    continue
-            
-            # Save the resume document
-            resume_file_path = os.path.join(self.resume_output_directory.get(), "AI_Generated_Resumes.docx")
-            doc.save(resume_file_path)
-            
-            self.results_text.insert(tk.END, f"\n✅ Generated {valid_entries} tailored resumes!\n")
-            self.results_text.insert(tk.END, f"📄 Resume file saved: {resume_file_path}\n")
+            if use_templates:
+                self.results_text.insert(tk.END, "\n🎨 Using template-based resume generation...\n")
+                self.generate_individual_resumes_with_templates(client, df, job_desc_col)
+            else:
+                self.results_text.insert(tk.END, "\n📝 Using text-based resume generation...\n")
+                self.generate_combined_resume(client, df, job_desc_col)
             
         except Exception as e:
             self.results_text.insert(tk.END, f"\n❌ Error in resume generation: {str(e)}\n")
+    
+    def generate_individual_resumes_with_templates(self, client, df, job_desc_col):
+        """Generate individual resume files using templates."""
+        valid_entries = 0
+        total_entries = len(df)
+        
+        self.results_text.insert(tk.END, f"\n🔍 Found {total_entries} total rows. Generating individual resumes...\n")
+        self.results_text.see(tk.END)
+        self.root.update()
+        
+        for index, row in df.iterrows():
+            company = row.get('Company', '')
+            position = row.get('Position', '')
+            job_description = row.get(job_desc_col, '')
             
-    def generate_single_resume(self, client, company, position, job_description):
-        """Generate a single tailored resume using OpenAI."""
-        prompt = f"""You are the top resume writer in the world. Your job is to take the job description I provide and tailor my resume so that it is ATS-optimized, keyword-rich, and highly compelling. Follow these steps carefully:
+            # Skip if any required field is empty
+            if pd.isna(company) or pd.isna(position) or pd.isna(job_description) or not str(job_description).strip():
+                continue
+            
+            valid_entries += 1
+            self.results_text.insert(tk.END, f"\n🤖 [{valid_entries}] Generating resume for {company}...\n")
+            self.results_text.see(tk.END)
+            self.root.update()
+            
+            try:
+                # Detect which template to use
+                template_type = self.detect_template_type(str(job_description), str(position))
+                template_path = self.java_template_path.get() if template_type == 'java' else self.csharp_template_path.get()
+                
+                self.results_text.insert(tk.END, f"📋 Using {template_type.upper()} template\n")
+                self.results_text.see(tk.END)
+                self.root.update()
+                
+                # Generate resume content using OpenAI
+                resume_content = self.generate_single_resume(client, company, position, str(job_description), template_type)
+                
+                # Load and populate template
+                doc = self.load_template(template_path)
+                populated_doc = self.populate_template(doc, resume_content, company, position)
+                
+                # Save individual resume file
+                import re
+                safe_company = re.sub(r'[<>:"/\\|?*]', '_', str(company))[:30]
+                safe_position = re.sub(r'[<>:"/\\|?*]', '_', str(position))[:30]
+                resume_filename = f"{valid_entries:03d}_{safe_company}_{safe_position}_Resume.docx"
+                resume_filepath = os.path.join(self.resume_output_directory.get(), resume_filename)
+                
+                populated_doc.save(resume_filepath)
+                
+                self.results_text.insert(tk.END, f"✅ Created: {resume_filename}\n")
+                self.results_text.see(tk.END)
+                self.root.update()
+                
+            except Exception as e:
+                self.results_text.insert(tk.END, f"❌ Error generating resume for {company}: {str(e)}\n")
+                continue
+        
+        self.results_text.insert(tk.END, f"\n✅ Generated {valid_entries} individual tailored resumes!\n")
+    
+    def generate_combined_resume(self, client, df, job_desc_col):
+        """Generate a combined resume document (original behavior)."""
+        from docx import Document
+        from docx.shared import Inches
+        from docx.enum.text import WD_ALIGN_PARAGRAPH
+        
+        doc = Document()
+        doc.add_heading('AI-Generated Tailored Resumes', 0)
+        
+        # Process each valid entry
+        valid_entries = 0
+        total_entries = len(df)
+        
+        self.results_text.insert(tk.END, f"\n🔍 Found {total_entries} total rows. Processing job descriptions...\n")
+        self.results_text.see(tk.END)
+        self.root.update()
+        
+        for index, row in df.iterrows():
+            company = row.get('Company', '')
+            position = row.get('Position', '')
+            job_description = row.get(job_desc_col, '')
+            
+            # Skip if any required field is empty
+            if pd.isna(company) or pd.isna(position) or pd.isna(job_description) or not str(job_description).strip():
+                continue
+            
+            valid_entries += 1
+            self.results_text.insert(tk.END, f"\n🤖 [{valid_entries}] Generating resume for {company}...\n")
+            self.results_text.see(tk.END)
+            self.root.update()
+            
+            try:
+                # Generate resume using OpenAI
+                resume_content = self.generate_single_resume(client, company, position, str(job_description), 'java')
+                
+                # Add to document
+                doc.add_heading(f'{company} - {position}', level=1)
+                doc.add_paragraph(resume_content)
+                doc.add_page_break()
+                
+                self.results_text.insert(tk.END, f"✅ Completed {company}\n")
+                self.results_text.see(tk.END)
+                self.root.update()
+                
+            except Exception as e:
+                self.results_text.insert(tk.END, f"❌ Error generating resume for {company}: {str(e)}\n")
+                continue
+        
+        # Save the resume document
+        resume_file_path = os.path.join(self.resume_output_directory.get(), "AI_Generated_Resumes.docx")
+        doc.save(resume_file_path)
+        
+        self.results_text.insert(tk.END, f"\n✅ Generated {valid_entries} tailored resumes!\n")
+        self.results_text.insert(tk.END, f"📄 Resume file saved: {resume_file_path}\n")
+            
+    def generate_single_resume(self, client, company, position, job_description, template_type='java'):
+        """Generate a single tailored resume using OpenAI and template type."""
+        
+        # Read template content to use as base
+        template_path = self.java_template_path.get() if template_type == 'java' else self.csharp_template_path.get()
+        
+        try:
+            # Load template to extract existing content
+            template_doc = Document(template_path)
+            template_content = "\n".join([paragraph.text for paragraph in template_doc.paragraphs if paragraph.text.strip()])
+        except:
+            # Fallback to hardcoded content if template can't be read
+            template_content = self.java_resume if template_type == 'java' else self.csharp_resume
+        
+        prompt = f"""You are the top resume writer in the world. Your job is to take the job description I provide and tailor a resume so that it is ATS-optimized, keyword-rich, and highly compelling.
 
-0. Resume Selection
-   * I will provide you with two base resumes: one focused on Java roles and one focused on C# roles.
-   * First, analyze the job description and decide which base resume (Java or C#) is most appropriate for this role.
-   * Clearly state which base resume you selected and why in one sentence.
-   * Use only the selected resume for tailoring in the following steps.
+Template Type Selected: {template_type.upper()}
+Reason: Based on job description analysis, this position requires {template_type} expertise.
+
+Follow these steps:
 
 1. Keyword Extraction
-   * Identify and list the most important hard skills, technical tools, industry terms, and role-specific keywords from the job description.
-   * Clearly highlight which ones are must-have ATS keywords that I absolutely need in my resume.
+   * Identify the most important hard skills, technical tools, industry terms, and role-specific keywords from the job description.
+   * Highlight must-have ATS keywords that are critical for this role.
 
 2. Resume Tailoring
-   * Rewrite my past work experience into 3–5 bullet points per role.
+   * Create a complete resume tailored for this specific {company} {position} role.
    * Use the XYZ method (Accomplished [X] as measured by [Y], by doing [Z]).
-   * Incorporate the identified keywords naturally into the bullet points, not just in the skills section.
-   * Ensure every bullet emphasizes impact, metrics, and outcomes (not just duties).
-   * Update job titles if needed to better align with industry-standard titles and the target job.
+   * Incorporate identified keywords naturally throughout the resume.
+   * Emphasize impact, metrics, and outcomes (not just duties).
+   * Focus on {template_type}-related technologies and frameworks.
    * Do not include an objective statement.
 
-3. Keyword Integration Check
-   * After writing the resume, show me exactly which keywords from the job description you integrated and where they appear (skills section, each work experience, etc.).
-   * If there are important keywords you could not include, explain why.
-   
-Note: 
-ATS Alignment
-   * Ensure formatting and phrasing are ATS-friendly.
-   * Avoid personal pronouns, vague buzzwords, or filler text.
-   * Prioritize strong action verbs and quantified results.
----
+3. Structure
+   * SKILLS section with relevant technologies
+   * WORK EXPERIENCE with 3-5 bullet points per role
+   * EDUCATION section
+   * PROJECTS section
+   * Use professional formatting
 
-Here are the two base resumes:
-[Java Resume] - 
-{self.java_resume}
+Base Template Content (adapt and enhance):
+{template_content}
 
-[C# Resume] - 
-{self.csharp_resume}
+Target Job Description:
+Company: {company}
+Position: {position}
+Description: {job_description}
 
-Here is the target job description:
-{job_description}"""
+Generate a complete, ATS-optimized resume tailored specifically for this role."""
 
         response = client.chat.completions.create(
             model="gpt-4o",
