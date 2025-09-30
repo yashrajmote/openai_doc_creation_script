@@ -10,8 +10,9 @@ A drag-and-drop app that converts Excel job applications into individual Word do
    ```
 
 2. Set up templates:
-   - Place your Java resume template as `templates/java_resume_template.dotx`
-   - Place your C# resume template as `templates/csharp_resume_template.dotx`
+   - Place your Java resume template as `templates/java_resume_template.docx`
+   - Place your C# resume template as `templates/csharp_resume_template.docx`
+   - **Note**: Convert your `.dotx` files to `.docx` format first
 
 3. Run the app:
    ```bash
@@ -29,10 +30,10 @@ Your Excel file needs these columns:
 
 ## What It Does
 
-- **Smart Template Selection**: Automatically chooses Java or C# template based on job description
+- **AI Template Selection**: AI analyzes job descriptions and intelligently chooses between Java or C# resume templates
 - **Individual Resume Files**: Creates one copy of the appropriate template per job (no AI modification)
-- **Master Document**: Generates a combined document with all AI responses for reference
-- **Template Copying**: Simply copies your template files with job-specific naming
+- **Master Document**: Generates a combined document with AI-tailored resumes for reference
+- **Smart Copying**: Copies your template files with job-specific naming (e.g., `CompanyName_SWE.docx`)
 
 ## Template Setup
 
