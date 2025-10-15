@@ -281,7 +281,7 @@ class DragDropApp:
     def process_with_templates_only(self):
         """Process Excel file and create template-based files only."""
         try:
-            df = pd.read_excel(self.current_file, header=12)
+            df = pd.read_excel(self.current_file, header=14)
             df.columns = df.columns.str.strip()
             
             # Find the job description column
